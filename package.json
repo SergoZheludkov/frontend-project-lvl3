@@ -24,6 +24,7 @@
   "dependencies": {
     "lodash": "^4.17.15",
     "on-change": "^2.0.1",
+    "websocket-extensions": "^0.1.4",
     "yup": "^0.29.1"
   },
   "devDependencies": {

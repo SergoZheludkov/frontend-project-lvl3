@@ -15,8 +15,9 @@ const formMessage = document.getElementById('message');
 
 const watchedForm = onChange(state.form, (path) => {
   if (path === 'url') {
-    console.log(watchedForm.validate);
-    watchedForm.validate = updateValidationState(state.form);
+    const { validate, errors } = updateValidationState(watchedForm);
+    watchedForm.errors = errors;
+    watchedForm.validate = validate;
   }
   if (path === 'validate' && !watchedForm.validate) {
     formInput.classList.add('is-invalid');

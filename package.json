@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "webpack": "webpack -w",
+    "start": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
@@ -19,7 +21,11 @@
     "url": "https://github.com/SergoZheludkov/frontend-project-lvl3/issues"
   },
   "homepage": "https://github.com/SergoZheludkov/frontend-project-lvl3#readme",
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "on-change": "^2.0.1",
+    "yup": "^0.29.1"
+  },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",

@@ -3,8 +3,8 @@ import updateValidationState from './validator';
 
 const state = {
   form: {
+    status: 'input',
     url: '',
-    validate: true,
     errors: {},
   },
   flows: {
@@ -13,29 +13,43 @@ const state = {
   links: {
     items: [],
   },
-  urls: [],
 };
 
 const form = document.querySelector('form');
 const formInput = form.querySelector('input');
 const formButton = form.querySelector('button');
 const formMessage = document.getElementById('message');
+const loadingButton = `<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+Loading...`;
 
 export const watchedForm = onChange(state.form, (path) => {
   if (path === 'url') {
-    const { validate, errors } = updateValidationState(watchedForm);
+    const { status, errors } = updateValidationState(watchedForm);
     watchedForm.errors = errors;
-    watchedForm.validate = validate;
+    watchedForm.status = status;
   }
-  if (path === 'validate' && !watchedForm.validate) {
+  if (path === 'status' && watchedForm.status === 'error') {
     formInput.classList.add('is-invalid');
     formButton.classList.add('disabled');
+    formButton.innerHTML = 'Add';
     formMessage.innerHTML = watchedForm.errors.url.message;
+    formMessage.classList.add('text-danger');
   }
-  if (path === 'validate' && watchedForm.validate) {
+  if (path === 'status' && watchedForm.status === 'input') {
     formInput.classList.remove('is-invalid');
     formButton.classList.remove('disabled');
     formMessage.innerHTML = 'Enter URL';
+    formMessage.classList.remove('text-danger');
+  }
+  if (path === 'status' && watchedForm.status === 'loading') {
+    formButton.classList.add('disabled');
+    formButton.innerHTML = loadingButton;
+    console.log(formButton);
+  }
+  if (path === 'status' && watchedForm.status === 'done') {
+    formButton.classList.remove('disabled');
+    formInput.value = '';
+    formButton.innerHTML = 'Add';
   }
 });
 
@@ -74,8 +88,8 @@ const getLinkDiv = ({
   return a;
 };
 
-export const wachedLinks = onChange(state.links, (path, value) => {
-  const links = value.slice(0, 10).map(getLinkDiv);
+export const watchedLinks = onChange(state.links, (path, value) => {
+  const links = value.map(getLinkDiv);
   rssLinks.innerHTML = '';
   rssLinks.append(...links);
 });

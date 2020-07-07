@@ -8,10 +8,10 @@ const schema = yup.object().shape({
 const updateValidationState = (form) => {
   try {
     schema.validateSync(form, { abortEarly: false });
-    return { validate: true, errors: null };
+    return { status: 'input', errors: null };
   } catch (e) {
     const errors = _.keyBy(e.inner, 'path');
-    return { validate: false, errors };
+    return { status: 'error', errors };
   }
 };
 

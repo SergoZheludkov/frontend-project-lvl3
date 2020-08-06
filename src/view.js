@@ -1,5 +1,7 @@
+import _ from 'lodash';
 import onChange from 'on-change';
 import updateValidationState from './validator';
+
 
 const state = {
   form: {
@@ -35,21 +37,20 @@ export const watchedForm = onChange(state.form, (path) => {
     formMessage.innerHTML = watchedForm.errors.url.message;
     formMessage.classList.add('text-danger');
   }
-  if (path === 'status' && watchedForm.status === 'input') {
-    formInput.classList.remove('is-invalid');
-    formButton.classList.remove('disabled');
-    formMessage.innerHTML = 'Enter URL';
-    formMessage.classList.remove('text-danger');
-  }
   if (path === 'status' && watchedForm.status === 'loading') {
     formButton.classList.add('disabled');
     formButton.innerHTML = loadingButton;
-    console.log(formButton);
   }
   if (path === 'status' && watchedForm.status === 'done') {
     formButton.classList.remove('disabled');
     formInput.value = '';
     formButton.innerHTML = 'Add';
+  }
+  if (path === 'status' && watchedForm.status === 'input') {
+    formInput.classList.remove('is-invalid');
+    formButton.classList.remove('disabled');
+    formMessage.innerHTML = 'Enter URL';
+    formMessage.classList.remove('text-danger');
   }
 });
 
@@ -58,6 +59,7 @@ const getFlowDiv = ({ title, description }) => {
   const div = document.createElement('div');
   const h2 = document.createElement('h2');
   const p = document.createElement('p');
+
   h2.innerHTML = title;
   p.innerHTML = description;
   div.append(h2, p);
@@ -73,23 +75,30 @@ export const watchedFlow = onChange(state.flows, (path, value) => {
 
 const rssLinks = document.getElementById('rss-links');
 const getLinkDiv = ({
-  title, description, publicDate, url,
-}) => {
+  title, description, publicDate, url, flowId,
+}, flowsData) => {
   const a = document.createElement('a');
   const h5 = document.createElement('h5');
   const p = document.createElement('p');
-  const small = document.createElement('small');
+  const div = document.createElement('div');
+  const date = document.createElement('small');
+  const flowTitle = document.createElement('small');
+
   h5.innerHTML = title;
   p.innerHTML = description;
-  small.innerHTML = publicDate;
-  a.append(h5, p, small);
+  date.innerHTML = publicDate;
+  flowTitle.innerHTML = _.find(flowsData, { id: flowId }).title;
+
+  div.append(date, flowTitle);
+  div.classList.add('d-flex', 'justify-content-between');
+  a.append(h5, p, div);
   a.setAttribute('href', url);
   a.classList.add('list-group-item', 'list-group-item-action');
   return a;
 };
 
 export const watchedLinks = onChange(state.links, (path, value) => {
-  const links = value.map(getLinkDiv);
+  const links = value.map((linkData) => getLinkDiv(linkData, state.flows.items));
   rssLinks.innerHTML = '';
   rssLinks.append(...links);
 });

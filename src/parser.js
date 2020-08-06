@@ -1,14 +1,9 @@
-import _ from 'lodash';
-
-const parseItem = (item, flowId) => {
-  const id = _.uniqueId();
+const parseItem = (item) => {
   const title = item.querySelector('title').textContent;
   const description = item.querySelector('description').textContent;
   const [publicDate] = item.querySelector('pubDate').textContent.match(/^[A-Za-z]{3},\s\d{2}\s[A-Za-z]{3}\s\d{4}\s\d{2}:\d{2}/m);
   const [url] = item.textContent.match(/https:\/\/\S{1,}/m);
   return {
-    id,
-    flowId,
     title,
     description,
     publicDate,
@@ -19,14 +14,13 @@ const parseItem = (item, flowId) => {
 export default (data) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(data, 'text/xml');
-  const id = _.uniqueId();
   const title = doc.querySelector('title').textContent;
   const description = doc.querySelector('description').textContent;
   const links = [...doc.getElementsByTagName('item')].slice(0, 10);
   // ------------------------------------------------------------
-  const itemsData = links.map((item) => parseItem(item, id));
+  const itemsData = links.map(parseItem);
   // ------------------------------------------------------------
   return {
-    id, title, description, itemsData,
+    title, description, itemsData,
   };
 };

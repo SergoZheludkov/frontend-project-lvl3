@@ -1,0 +1,16 @@
+{ 
+  "translation": {
+    "main": {
+      "heading": "RSS-агрегатор",
+      "description": "Начните читать RSS уже сегодня!",
+      "message": "Введите URL",
+      "button": "Добавить",
+      "loadingButton": "Загрузка"
+    },
+    "errors": {
+      "validationError": "url должен быть действительным URL",
+      "requestError": "Ошибка сети клиента. Пожалуйста, проверьте свой URL.",
+      "addRssError": "Этот RSS-поток уже добавлен"
+    }
+  }
+}

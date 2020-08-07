@@ -1,0 +1,16 @@
+{ 
+  "translation": {
+    "main": {
+      "heading": "RSS Reader",
+      "description": "Start reading RSS today!",
+      "message": "Enter URL",
+      "button": "Add",
+      "loadingButton": "Loading"
+    },
+    "errors": {
+      "validationError": "url must be a valid URL",
+      "requestError": "Client network error. Please check your URL.",
+      "addRssError": "This RSS has already been added"
+    }
+  }
+}

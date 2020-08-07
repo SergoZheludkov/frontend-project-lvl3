@@ -1,66 +1,88 @@
 import _ from 'lodash';
-import { watchedForm, watchedFlow, watchedLinks } from './view';
+import i18next from 'i18next';
 import getDataFromUrl from './getDataFromUrl';
 import parser from './parser';
+import {
+  watchLang, watchForm, watchFlow, watchLinks,
+} from './view';
+import en from './locales/en.json';
+import ru from './locales/ru.json';
 
 const getFilterNewLinks = (linksData) => linksData
-  .filter((link) => !_.find(watchedLinks.items, { title: link.title }));
+  .filter((link) => !_.find(watchLinks.items, { title: link.title }));
 
 const getNumeretedLinksData = (flowId, linksData) => getFilterNewLinks(linksData)
   .map((linkData) => ({ id: _.uniqueId(), flowId, ...linkData }));
 
-const getData = (url) => getDataFromUrl(url)
+const updateData = (url) => getDataFromUrl(url)
   .then((res) => {
-    const {
-      title, description, itemsData,
-    } = parser(res.data);
+    const { title, description, itemsData } = parser(res.data);
+    const flow = _.find(watchFlow.items, { title });
 
-    const flow = _.find(watchedFlow.items, { title });
     if (flow) {
-      watchedLinks.items = [...getNumeretedLinksData(flow.id, itemsData), ...watchedLinks.items];
-
-      const date = new Date();
-      console.log('flow id:', flow.id, '\ndate:', date, '\n', getNumeretedLinksData(flow.id, itemsData));
+      watchLinks.items = [...getNumeretedLinksData(flow.id, itemsData), ...watchLinks.items];
     } else {
       const id = _.uniqueId();
       const flowData = {
         id, url, title, description,
       };
-
-      watchedFlow.items = [flowData, ...watchedFlow.items];
-      watchedLinks.items = [...getNumeretedLinksData(id, itemsData), ...watchedLinks.items];
+      watchFlow.items = [flowData, ...watchFlow.items];
+      watchLinks.items = [...getNumeretedLinksData(id, itemsData), ...watchLinks.items];
     }
   });
 
+const setLanguageListener = (language) => {
+  const element = document.getElementById(language);
+  element.addEventListener('click', (event) => {
+    watchLang.type = event.target.id;
+  });
+};
+
+const setLanguage = () => {
+  i18next.init({
+    lng: watchLang.type,
+    debug: true,
+    resources: {
+      en,
+      ru,
+    },
+  });
+
+  const languages = ['ru', 'en'];
+  languages.map(setLanguageListener);
+};
+
 const app = () => {
+  setLanguage();
+
   const form = document.querySelector('form');
   let intervalId;
 
   form.elements.url.addEventListener('keyup', (event) => {
-    watchedForm.url = event.target.value;
+    watchForm.url = event.target.value;
   });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    if (watchedForm.status === 'error' || watchedForm.status === 'loading') {
+    if (watchForm.status === 'error' || watchForm.status === 'loading') {
       return;
     }
 
-    watchedForm.status = 'loading';
-    if (_.find(watchedFlow.items, { url: watchedForm.url })) {
-      watchedForm.errors = { url: { name: 'AddRssError', message: 'This RSS has already been added' } };
-      watchedForm.status = 'error';
+    watchForm.status = 'loading';
+    if (_.find(watchFlow.items, { url: watchForm.url })) {
+      watchForm.errors = { url: { name: 'AddRssError' } };
+      watchForm.status = 'error';
     } else {
-      getData(watchedForm.url)
+      updateData(watchForm.url)
         .then(() => {
-          watchedForm.status = 'done';
+          watchForm.status = 'done';
           clearInterval(intervalId);
-          intervalId = setInterval(() => watchedFlow.items.map(({ url }) => getData(url)), 60000);
+          intervalId = setInterval(() => watchFlow.items.map(({ url }) => updateData(url)), 60000);
         })
         .catch((e) => {
-          watchedForm.errors = { url: { name: 'RequestError', message: 'Client network error. Please check your URL.' } };
-          watchedForm.status = 'error';
+          watchForm.errors = { url: { name: 'RequestError' } };
+          watchForm.status = 'error';
           throw new Error(e);
         });
     }

@@ -1,9 +1,12 @@
 import _ from 'lodash';
 import onChange from 'on-change';
+import i18next from 'i18next';
 import updateValidationState from './validator';
 
-
 const state = {
+  language: {
+    type: 'en',
+  },
   form: {
     status: 'input',
     url: '',
@@ -21,35 +24,56 @@ const form = document.querySelector('form');
 const formInput = form.querySelector('input');
 const formButton = form.querySelector('button');
 const formMessage = document.getElementById('message');
-const loadingButton = `<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-Loading...`;
 
-export const watchedForm = onChange(state.form, (path) => {
+
+const setMainText = (elem) => {
+  const element = document.getElementById(elem);
+  element.innerHTML = i18next.t(`main.${elem}`);
+};
+
+export const watchLang = onChange(state.language, (path, value) => {
+  i18next.changeLanguage(watchLang.type);
+
+  const langButtons = [...document.getElementsByTagName('label')];
+  langButtons.map((button) => button.classList.remove('active'));
+  const newActiveButton = document.getElementById(value);
+  newActiveButton.classList.add('active');
+
+  const mainElements = ['heading', 'description', 'message', 'button'];
+  mainElements.map(setMainText);
+});
+
+
+export const watchForm = onChange(state.form, (path) => {
   if (path === 'url') {
-    const { status, errors } = updateValidationState(watchedForm);
-    watchedForm.errors = errors;
-    watchedForm.status = status;
+    const { status, errors } = updateValidationState(watchForm);
+    watchForm.errors = errors;
+    watchForm.status = status;
   }
-  if (path === 'status' && watchedForm.status === 'error') {
+  if (path === 'status' && watchForm.status === 'error') {
+    console.log(watchForm.errors);
     formInput.classList.add('is-invalid');
     formButton.classList.add('disabled');
-    formButton.innerHTML = 'Add';
-    formMessage.innerHTML = watchedForm.errors.url.message;
+    formButton.innerHTML = i18next.t('main.button');
+    const errorName = _.camelCase(watchForm.errors.url.name);
+    formMessage.innerHTML = i18next.t(`errors.${errorName}`);
     formMessage.classList.add('text-danger');
   }
-  if (path === 'status' && watchedForm.status === 'loading') {
+  if (path === 'status' && watchForm.status === 'loading') {
     formButton.classList.add('disabled');
+    const loadingButton = `<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+    ${i18next.t('main.loadingButton')}...`;
     formButton.innerHTML = loadingButton;
   }
-  if (path === 'status' && watchedForm.status === 'done') {
+  if (path === 'status' && watchForm.status === 'done') {
     formButton.classList.remove('disabled');
     formInput.value = '';
-    formButton.innerHTML = 'Add';
+    formButton.innerHTML = i18next.t('main.button');
   }
-  if (path === 'status' && watchedForm.status === 'input') {
+  if (path === 'status' && watchForm.status === 'input') {
     formInput.classList.remove('is-invalid');
     formButton.classList.remove('disabled');
-    formMessage.innerHTML = 'Enter URL';
+    formMessage.innerHTML = i18next.t('main.message');
     formMessage.classList.remove('text-danger');
   }
 });
@@ -67,7 +91,7 @@ const getFlowDiv = ({ title, description }) => {
   return div;
 };
 
-export const watchedFlow = onChange(state.flows, (path, value) => {
+export const watchFlow = onChange(state.flows, (path, value) => {
   const flows = value.map((flowData) => getFlowDiv(flowData));
   rssFlows.innerHTML = '';
   rssFlows.append(...flows);
@@ -97,7 +121,7 @@ const getLinkDiv = ({
   return a;
 };
 
-export const watchedLinks = onChange(state.links, (path, value) => {
+export const watchLinks = onChange(state.links, (path, value) => {
   const links = value.map((linkData) => getLinkDiv(linkData, state.flows.items));
   rssLinks.innerHTML = '';
   rssLinks.append(...links);

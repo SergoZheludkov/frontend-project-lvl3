@@ -20,6 +20,8 @@ const updateData = (url) => getDataFromUrl(url)
     const flow = _.find(watchFlow.items, { title });
 
     if (flow) {
+      const date = new Date();
+      console.log('flow id:', flow.id, '\ndate:', date, '\n', getNumeretedLinksData(flow.id, itemsData));
       watchLinks.items = [...getNumeretedLinksData(flow.id, itemsData), ...watchLinks.items];
     } else {
       const id = _.uniqueId();
@@ -29,6 +31,7 @@ const updateData = (url) => getDataFromUrl(url)
       watchFlow.items = [flowData, ...watchFlow.items];
       watchLinks.items = [...getNumeretedLinksData(id, itemsData), ...watchLinks.items];
     }
+    setTimeout(() => updateData(url), 15000);
   });
 
 const setLanguageListener = (language) => {
@@ -56,8 +59,6 @@ const app = () => {
   setLanguage();
 
   const form = document.querySelector('form');
-  let intervalId;
-
   form.elements.url.addEventListener('keyup', (event) => {
     watchForm.url = event.target.value;
   });
@@ -77,8 +78,6 @@ const app = () => {
       updateData(watchForm.url)
         .then(() => {
           watchForm.status = 'done';
-          clearInterval(intervalId);
-          intervalId = setInterval(() => watchFlow.items.map(({ url }) => updateData(url)), 60000);
         })
         .catch((e) => {
           watchForm.errors = { url: { name: 'RequestError' } };

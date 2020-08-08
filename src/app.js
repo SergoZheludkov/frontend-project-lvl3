@@ -20,8 +20,6 @@ const updateData = (url) => getDataFromUrl(url)
     const flow = _.find(watchFlow.items, { title });
 
     if (flow) {
-      const date = new Date();
-      console.log('flow id:', flow.id, '\ndate:', date, '\n', getNumeretedLinksData(flow.id, itemsData));
       watchLinks.items = [...getNumeretedLinksData(flow.id, itemsData), ...watchLinks.items];
     } else {
       const id = _.uniqueId();
@@ -31,7 +29,7 @@ const updateData = (url) => getDataFromUrl(url)
       watchFlow.items = [flowData, ...watchFlow.items];
       watchLinks.items = [...getNumeretedLinksData(id, itemsData), ...watchLinks.items];
     }
-    setTimeout(() => updateData(url), 15000);
+    setTimeout(() => updateData(url), 5000);
   });
 
 const setLanguageListener = (language) => {
@@ -65,7 +63,6 @@ const app = () => {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-
     if (watchForm.status === 'error' || watchForm.status === 'loading') {
       return;
     }

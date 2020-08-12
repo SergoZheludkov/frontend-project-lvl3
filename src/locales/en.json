@@ -8,9 +8,10 @@
       "loadingButton": "Loading"
     },
     "errors": {
-      "validationError": "url must be a valid URL",
-      "requestError": "Client network error. Please check your URL.",
-      "addRssError": "This RSS has already been added"
+      "url": "url must be a valid URL",
+      "notOneOf": "This RSS has already been added",
+      "request": "Client network error. Please check your URL.",
+      "parse": "Data parsing error"
     }
   }
 }

@@ -2,86 +2,96 @@ import _ from 'lodash';
 import i18next from 'i18next';
 import getDataFromUrl from './getDataFromUrl';
 import parser from './parser';
-import {
-  watchLang, watchForm, watchFlow, watchLinks,
-} from './view';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
+import {
+  getState, getLanguageWatcher, gerFormWacher, getFeedsWatcher, getPostsWatcher,
+} from './view';
 
-const getFilterNewLinks = (linksData) => linksData
-  .filter((link) => !_.find(watchLinks.items, { title: link.title }));
+const checkTitle = ({ title: inspect }, { title: exclude }) => inspect === exclude;
 
-const getNumeretedLinksData = (flowId, linksData) => getFilterNewLinks(linksData)
-  .map((linkData) => ({ id: _.uniqueId(), flowId, ...linkData }));
+const getNumeretedPostsData = (feedId, postsData) => postsData
+  .map((postData) => ({ id: _.uniqueId(), feedId, ...postData }));
 
-const updateData = (url) => getDataFromUrl(url)
+const updateData = (url, feedsWatch, postsWatch) => getDataFromUrl(url)
   .then((res) => {
-    const { title, description, itemsData } = parser(res.data);
-    const flow = _.find(watchFlow.items, { title });
+    const feedsWatcher = feedsWatch;
+    const postsWatcher = postsWatch;
+    const { title, description, postsData } = parser(res.data);
+    const feed = _.find(feedsWatcher.items, { title });
 
-    if (flow) {
-      watchLinks.items = [...getNumeretedLinksData(flow.id, itemsData), ...watchLinks.items];
+    if (feed) {
+      const newPosts = _.differenceWith(postsData, postsWatcher.items, checkTitle);
+      postsWatcher.items = [...getNumeretedPostsData(feed.id, newPosts), ...postsWatcher.items];
     } else {
       const id = _.uniqueId();
-      const flowData = {
+      const newFeedData = {
         id, url, title, description,
       };
-      watchFlow.items = [flowData, ...watchFlow.items];
-      watchLinks.items = [...getNumeretedLinksData(id, itemsData), ...watchLinks.items];
+      feedsWatcher.items = [newFeedData, ...feedsWatcher.items];
+      postsWatcher.items = [...getNumeretedPostsData(id, postsData), ...postsWatcher.items];
     }
-    setTimeout(() => updateData(url), 5000);
+    const timeToNextUpdate = 60000;
+    setTimeout(() => updateData(url, feedsWatcher, postsWatcher), timeToNextUpdate);
   });
 
-const setLanguageListener = (language) => {
+const setLanguageListener = (language, langWatch) => {
+  const languageWatcher = langWatch;
   const element = document.getElementById(language);
   element.addEventListener('click', (event) => {
-    watchLang.type = event.target.id;
+    languageWatcher.type = event.target.id;
   });
 };
 
-const setLanguage = () => {
+const setLanguage = (languageWatcher) => {
   i18next.init({
-    lng: watchLang.type,
+    lng: languageWatcher.type,
     debug: true,
     resources: {
       en,
       ru,
     },
   });
-
-  const languages = ['ru', 'en'];
-  languages.map(setLanguageListener);
 };
 
 const app = () => {
-  setLanguage();
+  const {
+    language: languageState,
+    form: formState,
+    feeds: feedsState,
+    posts: postsState,
+  } = getState();
+
+  const languages = ['ru', 'en'];
+  const languageWatcher = getLanguageWatcher(languageState);
+  setLanguage(languageWatcher);
+  languages.map((lang) => setLanguageListener(lang, languageWatcher));
+
+  const feedsWatcher = getFeedsWatcher(feedsState);
+  const postsWatcher = getPostsWatcher(postsState, feedsWatcher);
+  const formWatcher = gerFormWacher(formState, feedsWatcher);
 
   const form = document.querySelector('form');
   form.elements.url.addEventListener('keyup', (event) => {
-    watchForm.url = event.target.value;
+    formWatcher.url = event.target.value;
   });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (watchForm.status === 'error' || watchForm.status === 'loading') {
+    if (formWatcher.status === 'error' || formWatcher.status === 'loading') {
       return;
     }
 
-    watchForm.status = 'loading';
-    if (_.find(watchFlow.items, { url: watchForm.url })) {
-      watchForm.errors = { url: { name: 'AddRssError' } };
-      watchForm.status = 'error';
-    } else {
-      updateData(watchForm.url)
-        .then(() => {
-          watchForm.status = 'done';
-        })
-        .catch((e) => {
-          watchForm.errors = { url: { name: 'RequestError' } };
-          watchForm.status = 'error';
-          throw new Error(e);
-        });
-    }
+    formWatcher.status = 'loading';
+    updateData(formWatcher.url, feedsWatcher, postsWatcher)
+      .then(() => {
+        formWatcher.status = 'input';
+      })
+      .catch((e) => {
+        formWatcher.errors = { url: { type: e.message || 'request' } };
+        formWatcher.status = 'error';
+        throw new Error(e);
+      });
   });
 };
 

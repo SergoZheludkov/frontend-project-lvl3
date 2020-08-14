@@ -1,24 +1,8 @@
 import _ from 'lodash';
 import onChange from 'on-change';
 import i18next from 'i18next';
-import updateValidationState from './validator';
+import * as yup from 'yup';
 
-export const getState = () => ({
-  language: {
-    type: 'en',
-  },
-  form: {
-    status: 'input',
-    url: '',
-    errors: {},
-  },
-  feeds: {
-    items: [],
-  },
-  posts: {
-    items: [],
-  },
-});
 // ----------------------------------------------------------------------------------
 const setMainText = (elem) => {
   const element = document.getElementById(elem);
@@ -60,7 +44,6 @@ export const getFeedsWatcher = (feedsState) => {
     rssFeeds.append(...feeds);
   });
 };
-
 // ----------------------------------------------------------------------------------
 const getPostDiv = ({
   title, description, publicDate, url, feedId,
@@ -93,6 +76,22 @@ export const getPostsWatcher = (postsState, feedsWatcher) => {
   });
 };
 // ----------------------------------------------------------------------------------
+const getSchema = (urls) => yup.object().shape({
+  url: yup.string().url()
+    .notOneOf(urls),
+});
+
+const updateValidationState = (form, urls) => {
+  try {
+    const schema = getSchema(urls);
+    schema.validateSync(form, { abortEarly: false });
+    return { status: 'input', errors: null };
+  } catch (e) {
+    const errors = _.keyBy(e.inner, 'path');
+    return { status: 'error', errors };
+  }
+};
+
 export const gerFormWacher = (formState, feedsWatcher) => {
   const form = document.querySelector('form');
   const formInput = form.querySelector('input');

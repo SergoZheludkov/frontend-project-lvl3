@@ -1,13 +1,21 @@
-import _ from 'lodash';
 import i18next from 'i18next';
-import getDataFromUrl from './getDataFromUrl';
+import axios from 'axios';
+import _ from 'lodash';
 import parser from './parser';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import {
-  getState, getLanguageWatcher, gerFormWacher, getFeedsWatcher, getPostsWatcher,
+  getLanguageWatcher, gerFormWacher, getFeedsWatcher, getPostsWatcher,
 } from './view';
 
+const timeToNextUpdate = 60000;
+// ----------------------------------------------------------------------------------
+const proxy = 'https://cors-anywhere.herokuapp.com/';
+const getDataFromUrl = (url) => {
+  const proxyUrl = `${proxy}${url}`;
+  return axios.get(proxyUrl);
+};
+// ----------------------------------------------------------------------------------
 const checkTitle = ({ title: inspect }, { title: exclude }) => inspect === exclude;
 
 const getNumeretedPostsData = (feedId, postsData) => postsData
@@ -31,10 +39,9 @@ const updateData = (url, feedsWatch, postsWatch) => getDataFromUrl(url)
       feedsWatcher.items = [newFeedData, ...feedsWatcher.items];
       postsWatcher.items = [...getNumeretedPostsData(id, postsData), ...postsWatcher.items];
     }
-    const timeToNextUpdate = 60000;
     setTimeout(() => updateData(url, feedsWatcher, postsWatcher), timeToNextUpdate);
   });
-
+// ----------------------------------------------------------------------------------
 const setLanguageListener = (language, langWatch) => {
   const languageWatcher = langWatch;
   const element = document.getElementById(language);
@@ -53,23 +60,33 @@ const setLanguage = (languageWatcher) => {
     },
   });
 };
-
+// ----------------------------------------------------------------------------------
 const app = () => {
-  const {
-    language: languageState,
-    form: formState,
-    feeds: feedsState,
-    posts: postsState,
-  } = getState();
+  const state = {
+    language: {
+      type: 'en',
+    },
+    form: {
+      status: 'input',
+      url: '',
+      errors: {},
+    },
+    feeds: {
+      items: [],
+    },
+    posts: {
+      items: [],
+    },
+  };
 
   const languages = ['ru', 'en'];
-  const languageWatcher = getLanguageWatcher(languageState);
+  const languageWatcher = getLanguageWatcher(state.language);
   setLanguage(languageWatcher);
   languages.map((lang) => setLanguageListener(lang, languageWatcher));
 
-  const feedsWatcher = getFeedsWatcher(feedsState);
-  const postsWatcher = getPostsWatcher(postsState, feedsWatcher);
-  const formWatcher = gerFormWacher(formState, feedsWatcher);
+  const feedsWatcher = getFeedsWatcher(state.feeds);
+  const postsWatcher = getPostsWatcher(state.posts, feedsWatcher);
+  const formWatcher = gerFormWacher(state.form, feedsWatcher);
 
   const form = document.querySelector('form');
   form.elements.url.addEventListener('keyup', (event) => {

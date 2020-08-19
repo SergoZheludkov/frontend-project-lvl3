@@ -9,17 +9,13 @@ const parseFeed = (item) => {
 };
 
 export default (data) => {
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(data, 'text/xml');
-    const title = doc.querySelector('title').textContent;
-    const description = doc.querySelector('description').textContent;
-    const posts = [...doc.getElementsByTagName('item')].slice(0, 10);
-    const postsData = posts.map(parseFeed);
-    return {
-      title, description, postsData, parsererror: null,
-    };
-  } catch (e) {
-    throw new Error('parse');
-  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(data, 'text/xml');
+  const title = doc.querySelector('title').textContent;
+  const description = doc.querySelector('description').textContent;
+  const parsererror = doc.querySelector('parsererror');
+  if (parsererror) throw new Error(parsererror.textContent);
+  const posts = [...doc.getElementsByTagName('item')].slice(0, 10);
+  const postsData = posts.map(parseFeed);
+  return { title, description, postsData };
 };

@@ -70,7 +70,7 @@ const getPostDiv = ({
 export const getPostsWatcher = (postsState, feedsWatcher) => {
   const rssPosts = document.getElementById('rss-posts');
   return onChange(postsState, (path, value) => {
-    const posts = value.map((postData) => getPostDiv(postData, feedsWatcher.items));
+    const posts = value.map((postData) => getPostDiv(postData, feedsWatcher));
     rssPosts.innerHTML = '';
     rssPosts.append(...posts);
   });
@@ -101,29 +101,32 @@ export const gerFormWacher = (formState, feedsWatcher) => {
 
   const formWacher = onChange(formState, (path) => {
     if (path === 'url') {
-      const urls = feedsWatcher.items.map(({ url }) => url);
+      const urls = feedsWatcher.map(({ url }) => url);
       const { status, errors } = updateValidationState(formWacher, urls);
       formWacher.errors = errors;
       formWacher.status = status;
     }
     if (path === 'status' && formWacher.status === 'error') {
       formInput.classList.add('is-invalid');
-      formButton.classList.add('disabled');
+      formButton.setAttribute('disabled', 'disabled');
       formButton.innerHTML = i18next.t('main.button');
       const errorName = formWacher.errors.url.type;
       formMessage.innerHTML = i18next.t(`errors.${errorName}`);
       formMessage.classList.add('text-danger');
     }
     if (path === 'status' && formWacher.status === 'loading') {
-      formButton.classList.add('disabled');
+      formButton.setAttribute('disabled', 'disabled');
       formButton.innerHTML = loadingButton;
     }
     if (path === 'status' && formWacher.status === 'input') {
+      formButton.removeAttribute('disabled');
       formInput.classList.remove('is-invalid');
-      formButton.classList.remove('disabled');
       formMessage.innerHTML = i18next.t('main.message');
       formMessage.classList.remove('text-danger');
       formButton.innerHTML = i18next.t('main.button');
+    }
+    if (path === 'status' && formWacher.status === 'done') {
+      formButton.removeAttribute('disabled');
       formInput.value = '';
       formWacher.url = '';
     }

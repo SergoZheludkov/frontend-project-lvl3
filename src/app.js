@@ -21,23 +21,21 @@ const checkTitle = ({ title: inspect }, { title: exclude }) => inspect === exclu
 const getNumeretedPostsData = (feedId, postsData) => postsData
   .map((postData) => ({ id: _.uniqueId(), feedId, ...postData }));
 
-const updateData = (url, feedsWatch, postsWatch) => getDataFromUrl(url)
+const updateData = (url, feedsWatcher, postsWatcher) => getDataFromUrl(url)
   .then((res) => {
-    const feedsWatcher = feedsWatch;
-    const postsWatcher = postsWatch;
     const { title, description, postsData } = parser(res.data);
-    const feed = _.find(feedsWatcher.items, { title });
+    const feed = _.find(feedsWatcher, { title });
 
     if (feed) {
-      const newPosts = _.differenceWith(postsData, postsWatcher.items, checkTitle);
-      postsWatcher.items = [...getNumeretedPostsData(feed.id, newPosts), ...postsWatcher.items];
+      const newPosts = _.differenceWith(postsData, postsWatcher, checkTitle);
+      postsWatcher.unshift(...getNumeretedPostsData(feed.id, newPosts));
     } else {
       const id = _.uniqueId();
       const newFeedData = {
         id, url, title, description,
       };
-      feedsWatcher.items = [newFeedData, ...feedsWatcher.items];
-      postsWatcher.items = [...getNumeretedPostsData(id, postsData), ...postsWatcher.items];
+      feedsWatcher.unshift(newFeedData);
+      postsWatcher.unshift(...getNumeretedPostsData(id, postsData));
     }
     setTimeout(() => updateData(url, feedsWatcher, postsWatcher), timeToNextUpdate);
   });
@@ -71,12 +69,8 @@ const app = () => {
       url: '',
       errors: {},
     },
-    feeds: {
-      items: [],
-    },
-    posts: {
-      items: [],
-    },
+    feeds: [],
+    posts: [],
   };
 
   const languages = ['ru', 'en'];
@@ -95,17 +89,15 @@ const app = () => {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (formWatcher.status === 'error' || formWatcher.status === 'loading') {
-      return;
-    }
-
     formWatcher.status = 'loading';
     updateData(formWatcher.url, feedsWatcher, postsWatcher)
       .then(() => {
-        formWatcher.status = 'input';
+        formWatcher.status = 'done';
       })
       .catch((e) => {
-        formWatcher.errors = { url: { type: e.message || 'request' } };
+        const firstWordinErrorMessage = e.message.split(' ')[0];
+        const nameError = firstWordinErrorMessage === 'Request' ? firstWordinErrorMessage : e.name;
+        formWatcher.errors = { url: { type: nameError, message: e.message } };
         formWatcher.status = 'error';
         throw new Error(e);
       });

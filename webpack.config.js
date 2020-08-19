@@ -9,6 +9,11 @@ module.exports = {
     filename: 'main.js',
     path: path.join(__dirname, 'dist'),
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/template/index.html',
+    }),
+  ],
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
   },
@@ -21,11 +26,10 @@ module.exports = {
           loader: 'babel-loader',
         },
       },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
     ],
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: './src/template/index.html',
-    }),
-  ],
 };

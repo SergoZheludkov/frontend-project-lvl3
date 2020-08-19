@@ -10,8 +10,8 @@
     "errors": {
       "url": "url must be a valid URL",
       "notOneOf": "This RSS has already been added",
-      "request": "Client network error. Please check your URL.",
-      "parse": "Data parsing error"
+      "Request": "Client network error. Please check your URL.",
+      "TypeError": "Data type error"
     }
   }
 }

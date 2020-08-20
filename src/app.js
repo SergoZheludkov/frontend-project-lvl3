@@ -99,7 +99,7 @@ const app = () => {
         const nameError = firstWordinErrorMessage === 'Request' ? firstWordinErrorMessage : e.name;
         formWatcher.errors = { url: { type: nameError, message: e.message } };
         formWatcher.status = 'error';
-        throw new Error(e);
+        throw e;
       });
   });
 };

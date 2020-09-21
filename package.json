@@ -1,5 +1,5 @@
 {
-  "name": "frontend-project-lvl3",
+  "name": "rss-reader",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,14 +13,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SergoZheludkov/frontend-project-lvl3.git"
+    "url": "git+https://github.com/SergoZheludkov/rss-reader.git"
   },
   "author": "Sergei Zheludkov",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SergoZheludkov/frontend-project-lvl3/issues"
+    "url": "https://github.com/SergoZheludkov/rss-reader/issues"
   },
-  "homepage": "https://github.com/SergoZheludkov/frontend-project-lvl3#readme",
+  "homepage": "https://github.com/SergoZheludkov/rss-reader#readme",
   "dependencies": {
     "axios": "^0.19.2",
     "bootstrap": "^4.5.2",
